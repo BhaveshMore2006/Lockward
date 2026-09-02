@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "81177840526",
+    "project_id": "lockward-e356",
+    "storage_bucket": "lockward-e356.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:81177840526:android:4969152a30848cc8c4b2df",
+        "android_client_info": {
+          "package_name": "com.finalyearproject.lockward"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCA2zG8sk8EH8thckRbJTXd_BWUnTekp48"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
