@@ -6,6 +6,7 @@ import 'package:device_preview/device_preview.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'app/data/services/auth_service.dart';
+import 'app/data/services/vault_service.dart';
 import 'core/theme/app_colors.dart';
 import 'firebase_options.dart';
 import 'app/routes/app_pages.dart';
@@ -26,6 +27,9 @@ void main() async {
   } catch (e, stack) {
     debugPrint("Firebase init error: $e\n$stack");
   }
+
+  // Initialize VaultService globally
+  Get.put(VaultService());
 
   runApp(
     DevicePreview(

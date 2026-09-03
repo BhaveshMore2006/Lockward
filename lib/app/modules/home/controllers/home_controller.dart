@@ -1,108 +1,64 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-class VaultItem {
-  final String id;
-  final String title;
-  final String username;
-  final String password;
-  final IconData icon;
-  final Color color;
-
-  VaultItem({
-    required this.id,
-    required this.title,
-    required this.username,
-    required this.password,
-    required this.icon,
-    required this.color,
-  });
-}
+import '../../../data/models/vault_item.dart';
+import '../../../data/services/vault_service.dart';
+import '../../../routes/app_pages.dart';
 
 class HomeController extends GetxController {
-  final RxList<VaultItem> vaultItems = <VaultItem>[].obs;
+  final VaultService vaultService = Get.find<VaultService>();
+
+  // Bottom Navigation Current Tab Index (0: Home, 1: Analysis, 2: Search, 3: Setting)
+  final RxInt currentTabIndex = 0.obs;
+
+  // Search input & results
+  final TextEditingController searchController = TextEditingController();
   final RxString searchQuery = ''.obs;
+
+  // Settings toggles
+  final RxBool syncEnabled = true.obs;
+  final RxBool autofillEnabled = true.obs;
 
   @override
   void onInit() {
     super.onInit();
-    loadDummyData();
+    searchController.addListener(() {
+      searchQuery.value = searchController.text.trim();
+    });
   }
 
-  void loadDummyData() {
-    vaultItems.value = [
-      VaultItem(
-        id: '1',
-        title: 'Google',
-        username: 'user@gmail.com',
-        password: 'password123',
-        icon: Icons.g_mobiledata,
-        color: Colors.redAccent,
-      ),
-      VaultItem(
-        id: '2',
-        title: 'Netflix',
-        username: 'user@gmail.com',
-        password: 'secure_password!',
-        icon: Icons.movie,
-        color: Colors.red,
-      ),
-      VaultItem(
-        id: '3',
-        title: 'Bank of America',
-        username: 'john.doe',
-        password: 'bank_password_456',
-        icon: Icons.account_balance,
-        color: Colors.blueAccent,
-      ),
-      VaultItem(
-        id: '4',
-        title: 'Spotify',
-        username: 'music_lover',
-        password: 'spotify_rocks',
-        icon: Icons.music_note,
-        color: Colors.green,
-      ),
-    ];
+  @override
+  void onClose() {
+    searchController.dispose();
+    super.onClose();
   }
 
-  void search(String query) {
-    searchQuery.value = query;
+  void changeTab(int index) {
+    currentTabIndex.value = index;
   }
 
-  void copyPassword(String password) {
-    // In a real app, use Clipboard.setData(ClipboardData(text: password))
-    Get.snackbar(
-      'Copied',
-      'Password copied to clipboard',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-      duration: const Duration(seconds: 2),
-    );
+  void navigateToProfile() {
+    Get.toNamed(Routes.PROFILE_PAGE);
   }
 
-  void addNewItem() {
-    Get.snackbar(
-      'New Item',
-      'This feature is coming soon!',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.blueAccent,
-      colorText: Colors.white,
-    );
+  void navigateToNewRecord() {
+    Get.toNamed(Routes.NEW_RECORD);
   }
 
-  void logout() {
-    Get.offAllNamed('/login');
+  void navigateToDetails(VaultItem item) {
+    Get.toNamed(Routes.PASSWORD_DETAILS, arguments: item);
   }
 
-  List<VaultItem> get filteredItems {
+  // Filtered list for search tab
+  List<VaultItem> get searchResults {
     if (searchQuery.value.isEmpty) {
-      return vaultItems;
+      return vaultService.items;
     }
-    return vaultItems
+    final q = searchQuery.value.toLowerCase();
+    return vaultService.items
         .where((item) =>
-            item.title.toLowerCase().contains(searchQuery.value.toLowerCase()))
+            item.name.toLowerCase().contains(q) ||
+            item.username.toLowerCase().contains(q) ||
+            item.link.toLowerCase().contains(q))
         .toList();
   }
 }

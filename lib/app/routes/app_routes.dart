@@ -9,6 +9,9 @@ abstract class Routes {
   static const CHANGE_PASSWORD = _Paths.CHANGE_PASSWORD;
   static const SPLASH_SCREEN = _Paths.SPLASH_SCREEN;
   static const OTP_VERIFICATION = _Paths.OTP_VERIFICATION;
+  static const PROFILE_PAGE = _Paths.PROFILE_PAGE;
+  static const NEW_RECORD = _Paths.NEW_RECORD;
+  static const PASSWORD_DETAILS = _Paths.PASSWORD_DETAILS;
 }
 
 abstract class _Paths {
@@ -19,4 +22,7 @@ abstract class _Paths {
   static const CHANGE_PASSWORD = '/change-password';
   static const SPLASH_SCREEN = '/splash-screen';
   static const OTP_VERIFICATION = '/otp-verification';
+  static const PROFILE_PAGE = '/profile-page';
+  static const NEW_RECORD = '/new-record';
+  static const PASSWORD_DETAILS = '/password-details';
 }
