@@ -6,6 +6,7 @@ import '../../../routes/app_pages.dart';
 class SignUpController extends GetxController {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
+  final phoneController = TextEditingController();
   final passwordController = TextEditingController();
 
   final isLoading = false.obs;
@@ -15,6 +16,7 @@ class SignUpController extends GetxController {
   void onClose() {
     nameController.dispose();
     emailController.dispose();
+    phoneController.dispose();
     passwordController.dispose();
     super.onClose();
   }
@@ -26,9 +28,10 @@ class SignUpController extends GetxController {
   void register() {
     final name = nameController.text.trim();
     final email = emailController.text.trim();
+    final phone = phoneController.text.trim();
     final password = passwordController.text.trim();
 
-    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+    if (name.isEmpty || email.isEmpty || phone.isEmpty || password.isEmpty) {
       Get.snackbar(
         'Error',
         'Please fill in all fields',
@@ -39,11 +42,16 @@ class SignUpController extends GetxController {
       return;
     }
 
-    // Stub for UI testing
+    // Pass data to OTP screen for later registration
     isLoading.value = true;
     Future.delayed(const Duration(seconds: 1), () {
       isLoading.value = false;
-      Get.offAllNamed(Routes.HOME);
+      Get.toNamed(Routes.OTP_VERIFICATION, arguments: [
+        name,
+        email,
+        phone,
+        password,
+      ]);
     });
   }
 }

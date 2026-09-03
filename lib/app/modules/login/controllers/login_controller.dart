@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../data/services/auth_service.dart';
 import '../../../routes/app_pages.dart';
 
 class LoginController extends GetxController {
@@ -9,6 +10,8 @@ class LoginController extends GetxController {
 
   final isLoading = false.obs;
   final isPasswordVisible = false.obs;
+
+  final AuthService _authService = Get.find<AuthService>();
 
   @override
   void onClose() {
@@ -21,7 +24,7 @@ class LoginController extends GetxController {
     isPasswordVisible.value = !isPasswordVisible.value;
   }
 
-  void login() {
+  void login() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
@@ -36,11 +39,12 @@ class LoginController extends GetxController {
       return;
     }
 
-    // Stub for UI testing
     isLoading.value = true;
-    Future.delayed(const Duration(seconds: 1), () {
-      isLoading.value = false;
+    bool success = await _authService.login(email, password);
+    isLoading.value = false;
+    
+    if (success) {
       Get.offAllNamed(Routes.HOME);
-    });
+    }
   }
 }

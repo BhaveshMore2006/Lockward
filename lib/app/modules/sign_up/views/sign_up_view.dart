@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../controllers/sign_up_controller.dart';
 
 class SignUpView extends GetView<SignUpController> {
@@ -9,16 +10,18 @@ class SignUpView extends GetView<SignUpController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Get.back(),
+        ),
+      ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: [
-              Theme.of(context).colorScheme.secondaryContainer,
-              Theme.of(context).colorScheme.surface,
-            ],
-          ),
+        decoration: const BoxDecoration(
+          gradient: AppColors.backgroundGradient,
         ),
         child: SafeArea(
           child: Center(
@@ -28,54 +31,64 @@ class SignUpView extends GetView<SignUpController> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(
-                    Icons.person_add_alt_1_outlined,
-                    size: 80,
-                    color: Theme.of(context).colorScheme.secondary,
+                  Center(
+                    child: Image.asset(
+                      'assets/images/icon.png',
+                      width: 100,
+                      height: 100,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          Icons.security,
+                          size: 100,
+                          color: AppColors.primary,
+                        );
+                      },
+                    ),
                   ),
                   const SizedBox(height: 32),
-                  Text(
+                  const Text(
                     'Create Account',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textDark,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  const Text(
                     'Sign up to get started',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 48),
                   TextField(
                     controller: controller.nameController,
                     keyboardType: TextInputType.name,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Full Name',
-                      prefixIcon: const Icon(Icons.person_outline),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Theme.of(context).colorScheme.surface,
+                      prefixIcon: Icon(Icons.person_outline,  color: Colors.black),
                     ),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: controller.emailController,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Email',
-                      prefixIcon: const Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Theme.of(context).colorScheme.surface,
+                      prefixIcon: Icon(Icons.email_outlined, color: Colors.black),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: controller.phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Phone Number',
+                      prefixIcon: Icon(Icons.phone_outlined,  color: Colors.black),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -85,20 +98,16 @@ class SignUpView extends GetView<SignUpController> {
                       obscureText: !controller.isPasswordVisible.value,
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock_outline),
+                        prefixIcon: const Icon(Icons.lock_outline, color: Colors.black),
                         suffixIcon: IconButton(
                           icon: Icon(
                             controller.isPasswordVisible.value
                                 ? Icons.visibility
                                 : Icons.visibility_off,
+                            color: Colors.black,
                           ),
                           onPressed: controller.togglePasswordVisibility,
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        filled: true,
-                        fillColor: Theme.of(context).colorScheme.surface,
                       ),
                     ),
                   ),
@@ -106,21 +115,29 @@ class SignUpView extends GetView<SignUpController> {
                   Obx(
                     () => controller.isLoading.value
                         ? const Center(child: CircularProgressIndicator())
-                        : FilledButton(
-                            onPressed: controller.register,
-                            style: FilledButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.secondary,
-                              foregroundColor: Theme.of(context).colorScheme.onSecondary,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                        : Container(
+                            decoration: BoxDecoration(
+                              gradient: AppColors.primaryGradient,
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Text(
-                              'SIGN UP',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                            child: ElevatedButton(
+                              onPressed: controller.register,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                shadowColor: Colors.transparent,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: const Text(
+                                'SIGN UP',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
@@ -129,15 +146,19 @@ class SignUpView extends GetView<SignUpController> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
+                      const Text(
                         "Already have an account? ",
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                        style: TextStyle(color: Colors.black),
                       ),
                       TextButton(
                         onPressed: () => Get.back(),
-                        child: const Text('Login'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                        ),
+                        child: const Text(
+                          'Login',
+                          style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white),
+                        ),
                       ),
                     ],
                   ),
