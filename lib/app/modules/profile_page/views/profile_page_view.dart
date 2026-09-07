@@ -129,6 +129,13 @@ class ProfilePageView extends GetView<ProfilePageController> {
           const Divider(height: 24, color: Colors.black12),
 
           _buildActionTile(
+            title: 'Change password',
+            trailingWidget: const Icon(Icons.chevron_right_rounded, color: Colors.black26, size: 24),
+            onTap: () => Get.toNamed(Routes.CHANGE_PASSWORD),
+          ),
+          const Divider(height: 24, color: Colors.black12),
+
+          _buildActionTile(
             title: 'Trusted devices',
             trailingWidget: const Icon(Icons.chevron_right_rounded, color: Colors.black26, size: 24),
             onTap: () {},

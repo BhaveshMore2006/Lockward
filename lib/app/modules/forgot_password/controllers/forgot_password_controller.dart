@@ -1,88 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../data/services/auth_service.dart';
 import '../../../routes/app_pages.dart';
 
-class OtpVerificationController extends GetxController {
-  final otpController = TextEditingController();
+class ForgotPasswordController extends GetxController {
+  final emailController = TextEditingController();
   final isLoading = false.obs;
-  final defaultOtp = '1234';
-
-  final AuthService _authService = Get.find<AuthService>();
-
-  bool isForgotPasswordFlow = false;
-  String userName = '';
-  String userEmail = '';
-  String userPhone = '';
-  String userPassword = '';
-
-  @override
-  void onInit() {
-    super.onInit();
-    final args = Get.arguments;
-    if (args != null && args is Map && args['flow'] == 'forgot_password') {
-      isForgotPasswordFlow = true;
-      userEmail = args['email']?.toString() ?? '';
-    } else if (args != null && args is List && args.length >= 4) {
-      userName = args[0].toString();
-      userEmail = args[1].toString();
-      userPhone = args[2].toString();
-      userPassword = args[3].toString();
-    } else {
-      debugPrint("OTP ERROR: Get.arguments is missing or invalid: $args");
-    }
-  }
 
   @override
   void onClose() {
-    otpController.dispose();
+    emailController.dispose();
     super.onClose();
   }
 
-  void verifyOtp() async {
-    if (otpController.text.trim() == defaultOtp) {
-      // 1. If this is Forgot Password flow, direct to Enter New Password screen
-      if (isForgotPasswordFlow) {
-        if (userEmail.isEmpty) {
-          _showErrorDialog('Email address is missing. Please restart from Forgot Password.');
-          return;
-        }
-        Get.toNamed(
-          Routes.RESET_PASSWORD,
-          arguments: {'email': userEmail},
-        );
-        return;
-      }
+  void proceedToOtp() {
+    final email = emailController.text.trim();
 
-      // 2. Otherwise it's the Sign Up registration flow
-      isLoading.value = true;
-
-      if (userEmail.isEmpty) {
-        isLoading.value = false;
-        _showErrorDialog('User data is missing. Please restart from Sign Up.');
-        return;
-      }
-
-      try {
-        bool success = await _authService.register(
-          name: userName,
-          email: userEmail,
-          phone: userPhone,
-          password: userPassword,
-        );
-
-        isLoading.value = false;
-        if (success) {
-          Get.offAllNamed(Routes.HOME);
-        }
-      } catch (e) {
-        isLoading.value = false;
-        _showErrorDialog('Registration failed: $e');
-      }
-    } else {
-      _showErrorDialog('Please enter the default OTP: 1234');
+    if (email.isEmpty) {
+      _showErrorDialog('Please enter your email address.');
+      return;
     }
+
+    if (!GetUtils.isEmail(email)) {
+      _showErrorDialog('Please enter a valid email address.');
+      return;
+    }
+
+    // Direct user to the OTP verification page
+    Get.toNamed(
+      Routes.OTP_VERIFICATION,
+      arguments: {
+        'flow': 'forgot_password',
+        'email': email,
+      },
+    );
   }
 
   void _showErrorDialog(String message) {
@@ -111,7 +62,7 @@ class OtpVerificationController extends GetxController {
               ),
               const SizedBox(height: 18),
               const Text(
-                'Invalid Code',
+                'Invalid Email',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,

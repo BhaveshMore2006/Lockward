@@ -12,6 +12,8 @@ abstract class Routes {
   static const PROFILE_PAGE = _Paths.PROFILE_PAGE;
   static const NEW_RECORD = _Paths.NEW_RECORD;
   static const PASSWORD_DETAILS = _Paths.PASSWORD_DETAILS;
+  static const FORGOT_PASSWORD = _Paths.FORGOT_PASSWORD;
+  static const RESET_PASSWORD = _Paths.RESET_PASSWORD;
 }
 
 abstract class _Paths {
@@ -25,4 +27,6 @@ abstract class _Paths {
   static const PROFILE_PAGE = '/profile-page';
   static const NEW_RECORD = '/new-record';
   static const PASSWORD_DETAILS = '/password-details';
+  static const FORGOT_PASSWORD = '/forgot-password';
+  static const RESET_PASSWORD = '/reset-password';
 }

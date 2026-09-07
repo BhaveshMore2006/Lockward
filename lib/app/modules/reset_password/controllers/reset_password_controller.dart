@@ -2,30 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../data/services/auth_service.dart';
+import '../../../routes/app_pages.dart';
 
-class ChangePasswordController extends GetxController {
-  final currentPasswordController = TextEditingController();
+class ResetPasswordController extends GetxController {
   final newPasswordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
-  final isCurrentPasswordVisible = false.obs;
   final isNewPasswordVisible = false.obs;
   final isConfirmPasswordVisible = false.obs;
-
   final isLoading = false.obs;
+
+  String email = '';
 
   final AuthService _authService = Get.find<AuthService>();
 
   @override
+  void onInit() {
+    super.onInit();
+    final args = Get.arguments;
+    if (args != null && args is Map && args['email'] != null) {
+      email = args['email'].toString();
+    } else if (args != null) {
+      email = args.toString();
+    }
+  }
+
+  @override
   void onClose() {
-    currentPasswordController.dispose();
     newPasswordController.dispose();
     confirmPasswordController.dispose();
     super.onClose();
-  }
-
-  void toggleCurrentPasswordVisibility() {
-    isCurrentPasswordVisible.value = !isCurrentPasswordVisible.value;
   }
 
   void toggleNewPasswordVisibility() {
@@ -36,23 +42,17 @@ class ChangePasswordController extends GetxController {
     isConfirmPasswordVisible.value = !isConfirmPasswordVisible.value;
   }
 
-  void changePassword() async {
-    final currentPassword = currentPasswordController.text.trim();
+  void resetPassword() async {
     final newPassword = newPasswordController.text.trim();
     final confirmPassword = confirmPasswordController.text.trim();
 
-    if (currentPassword.isEmpty || newPassword.isEmpty || confirmPassword.isEmpty) {
-      _showErrorDialog('Please fill in all password fields.');
+    if (newPassword.isEmpty || confirmPassword.isEmpty) {
+      _showErrorDialog('Please enter and re-enter your new password.');
       return;
     }
 
     if (newPassword.length < 6) {
-      _showErrorDialog('The new password must be at least 6 characters long.');
-      return;
-    }
-
-    if (newPassword == currentPassword) {
-      _showErrorDialog('The new password cannot be the same as your current password.');
+      _showErrorDialog('New password must be at least 6 characters long.');
       return;
     }
 
@@ -62,14 +62,13 @@ class ChangePasswordController extends GetxController {
     }
 
     isLoading.value = true;
-    final result = await _authService.changePassword(
-      currentPassword: currentPassword,
+    final result = await _authService.resetPasswordWithOtp(
+      email: email,
       newPassword: newPassword,
     );
     isLoading.value = false;
 
     if (result.success) {
-      currentPasswordController.clear();
       newPasswordController.clear();
       confirmPasswordController.clear();
       _showSuccessDialog(result.message);
@@ -104,7 +103,7 @@ class ChangePasswordController extends GetxController {
               ),
               const SizedBox(height: 18),
               const Text(
-                'Password Change Failed',
+                'Reset Failed',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -176,7 +175,7 @@ class ChangePasswordController extends GetxController {
               ),
               const SizedBox(height: 18),
               const Text(
-                'Password Changed!',
+                'Password Reset!',
                 style: TextStyle(
                   fontSize: 19,
                   fontWeight: FontWeight.bold,
@@ -200,7 +199,7 @@ class ChangePasswordController extends GetxController {
                 child: ElevatedButton(
                   onPressed: () {
                     Get.back(); // close popup dialog
-                    Get.back(); // navigate back from Change Password to Profile
+                    Get.offAllNamed(Routes.LOGIN); // return to Login page
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF10B981),
@@ -212,7 +211,7 @@ class ChangePasswordController extends GetxController {
                     elevation: 0,
                   ),
                   child: const Text(
-                    'Done',
+                    'Back to Login',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                   ),
                 ),
