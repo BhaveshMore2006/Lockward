@@ -14,6 +14,7 @@ class VaultItem {
   final Color brandColor;
   final String iconLetter;
   final IconData? iconData;
+  final bool isFavorite;
 
   VaultItem({
     required this.id,
@@ -27,6 +28,7 @@ class VaultItem {
     required this.brandColor,
     required this.iconLetter,
     this.iconData,
+    this.isFavorite = false,
   });
 
   VaultItem copyWith({
@@ -41,6 +43,7 @@ class VaultItem {
     Color? brandColor,
     String? iconLetter,
     IconData? iconData,
+    bool? isFavorite,
   }) {
     return VaultItem(
       id: id ?? this.id,
@@ -54,6 +57,7 @@ class VaultItem {
       brandColor: brandColor ?? this.brandColor,
       iconLetter: iconLetter ?? this.iconLetter,
       iconData: iconData ?? this.iconData,
+      isFavorite: isFavorite ?? this.isFavorite,
     );
   }
 
@@ -67,6 +71,28 @@ class VaultItem {
       'link': link,
       'autofill': autofill,
       'securityStatus': securityStatus.name,
+      'isFavorite': isFavorite,
+      'brandColor': brandColor.value,
+      'iconLetter': iconLetter,
     };
+  }
+
+  factory VaultItem.fromMap(Map<String, dynamic> map, String id) {
+    return VaultItem(
+      id: id,
+      name: map['name'] ?? '',
+      username: map['username'] ?? '',
+      password: map['password'] ?? '',
+      category: map['category'] ?? 'Other',
+      link: map['link'] ?? '',
+      autofill: map['autofill'] ?? false,
+      securityStatus: SecurityStatus.values.firstWhere(
+        (e) => e.name == map['securityStatus'],
+        orElse: () => SecurityStatus.weak,
+      ),
+      brandColor: Color(map['brandColor'] ?? 0xFF555555),
+      iconLetter: map['iconLetter'] ?? 'A',
+      isFavorite: map['isFavorite'] ?? false,
+    );
   }
 }

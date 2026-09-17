@@ -2,157 +2,131 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:encrypt/encrypt.dart' as encrypt;
 import '../models/vault_item.dart';
 
 class VaultService extends GetxService {
   static VaultService get to => Get.find();
+
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   final RxList<VaultItem> items = <VaultItem>[].obs;
 
   @override
   void onInit() {
     super.onInit();
-    _loadInitialItems();
+    _auth.authStateChanges().listen((User? user) {
+      if (user != null) {
+        _listenToVaultItems(user.uid);
+      } else {
+        items.clear();
+      }
+    });
   }
 
-  void _loadInitialItems() {
-    items.assignAll([
-      VaultItem(
-        id: '1',
-        name: 'Behance',
-        username: 'design.steve@gmail.com',
-        password: 'Czb6n1WFh8Qvia#M',
-        category: 'Priority',
-        link: 'behance.net',
-        autofill: true,
-        securityStatus: SecurityStatus.risk,
-        brandColor: const Color(0xFF0057FF),
-        iconLetter: 'Bē',
-      ),
-      VaultItem(
-        id: '2',
-        name: 'Adobe',
-        username: 'work.steve@gmail.com',
-        password: 'Czb6n1WFh8Qvia#M',
-        category: 'Priority',
-        link: 'adobe.com',
-        autofill: true,
-        securityStatus: SecurityStatus.safe,
-        brandColor: const Color(0xFFED2224),
-        iconLetter: 'A',
-      ),
-      VaultItem(
-        id: '3',
-        name: 'Netflix',
-        username: 'chill.steve@gmail.com',
-        password: 'Chill_Movie#2026',
-        category: 'Entertainment',
-        link: 'netflix.com',
-        autofill: true,
-        securityStatus: SecurityStatus.safe,
-        brandColor: const Color(0xFF141414),
-        iconLetter: 'N',
-      ),
-      VaultItem(
-        id: '4',
-        name: 'Spotify',
-        username: 'chill.steve@gmail.com',
-        password: 'Music_Vibes!99',
-        category: 'Entertainment',
-        link: 'spotify.com',
-        autofill: true,
-        securityStatus: SecurityStatus.safe,
-        brandColor: const Color(0xFF1DB954),
-        iconLetter: 'S',
-      ),
-      VaultItem(
-        id: '5',
-        name: 'Steam',
-        username: 'chill.steve@gmail.com',
-        password: 'SteamGaming#456',
-        category: 'Entertainment',
-        link: 'steampowered.com',
-        autofill: true,
-        securityStatus: SecurityStatus.weak,
-        brandColor: const Color(0xFF171A21),
-        iconLetter: 'St',
-      ),
-      VaultItem(
-        id: '6',
-        name: 'Medium',
-        username: 'work.steve@gmail.com',
-        password: 'ReadMedium@Daily1',
-        category: 'Work',
-        link: 'medium.com',
-        autofill: true,
-        securityStatus: SecurityStatus.safe,
-        brandColor: const Color(0xFF242424),
-        iconLetter: 'M',
-      ),
-      VaultItem(
-        id: '7',
-        name: 'Apple',
-        username: 'robert.eau@icloud.com',
-        password: 'robert_eau_pass',
-        category: 'Work',
-        link: 'apple.com',
-        autofill: true,
-        securityStatus: SecurityStatus.weak,
-        brandColor: const Color(0xFF555555),
-        iconLetter: '',
-      ),
-      VaultItem(
-        id: '8',
-        name: 'Codepen',
-        username: 'steve@codepen.io',
-        password: 'WebCode_Pen!404',
-        category: 'Work',
-        link: 'codepen.io',
-        autofill: false,
-        securityStatus: SecurityStatus.safe,
-        brandColor: const Color(0xFF000000),
-        iconLetter: 'CP',
-      ),
-      VaultItem(
-        id: '9',
-        name: 'Facebook',
-        username: 'setto@rem.ru',
-        password: 'Social_FB#Connect',
-        category: 'Priority',
-        link: 'facebook.com',
-        autofill: true,
-        securityStatus: SecurityStatus.safe,
-        brandColor: const Color(0xFF1877F2),
-        iconLetter: 'f',
-      ),
-      VaultItem(
-        id: '10',
-        name: 'Figma',
-        username: 'steve@figma.com',
-        password: 'UiUxDesignFigma#2',
-        category: 'Work',
-        link: 'figma.com',
-        autofill: true,
-        securityStatus: SecurityStatus.safe,
-        brandColor: const Color(0xFFF24E1E),
-        iconLetter: 'Fg',
-      ),
-    ]);
+  encrypt.Encrypter _getEncrypter(String uid) {
+    // Basic key derivation from UID (padding or truncating to 32 chars)
+    final keyString = uid.padRight(32, '0').substring(0, 32);
+    final key = encrypt.Key.fromUtf8(keyString);
+    return encrypt.Encrypter(encrypt.AES(key));
   }
 
-  void addItem(VaultItem item) {
-    items.insert(0, item);
+  String _encryptPassword(String plainText, String uid) {
+    final encrypter = _getEncrypter(uid);
+    final iv = encrypt.IV.fromLength(16);
+    final encrypted = encrypter.encrypt(plainText, iv: iv);
+    return '${iv.base64}:${encrypted.base64}';
   }
 
-  void updateItem(VaultItem item) {
-    final index = items.indexWhere((element) => element.id == item.id);
-    if (index != -1) {
-      items[index] = item;
+  String _decryptPassword(String encryptedText, String uid) {
+    try {
+      final parts = encryptedText.split(':');
+      if (parts.length != 2) return encryptedText; // Not encrypted properly
+      final iv = encrypt.IV.fromBase64(parts[0]);
+      final encrypted = encrypt.Encrypted.fromBase64(parts[1]);
+      final encrypter = _getEncrypter(uid);
+      return encrypter.decrypt(encrypted, iv: iv);
+    } catch (e) {
+      debugPrint('Error decrypting password: $e');
+      return 'Error Decrypting';
     }
   }
 
-  void deleteItem(String id) {
-    items.removeWhere((element) => element.id == id);
+  void _listenToVaultItems(String uid) {
+    _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('vault_items')
+        .snapshots()
+        .listen((snapshot) {
+      final List<VaultItem> newItems = [];
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        if (data.containsKey('password')) {
+          data['password'] = _decryptPassword(data['password'], uid);
+        }
+        newItems.add(VaultItem.fromMap(data, doc.id));
+      }
+      items.assignAll(newItems);
+    });
+  }
+
+  Future<void> addItem(VaultItem item) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    
+    final data = item.toMap();
+    data['password'] = _encryptPassword(item.password, user.uid);
+    data['createdAt'] = FieldValue.serverTimestamp();
+
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('vault_items')
+        .add(data);
+  }
+
+  Future<void> updateItem(VaultItem item) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final data = item.toMap();
+    data['password'] = _encryptPassword(item.password, user.uid);
+    data['updatedAt'] = FieldValue.serverTimestamp();
+
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('vault_items')
+        .doc(item.id)
+        .update(data);
+  }
+
+  Future<void> deleteItem(String id) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('vault_items')
+        .doc(id)
+        .delete();
+  }
+
+  Future<void> toggleFavorite(VaultItem item) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('vault_items')
+        .doc(item.id)
+        .update({'isFavorite': !item.isFavorite});
   }
 
   void copyPassword(String password, {String title = 'Password'}) {
