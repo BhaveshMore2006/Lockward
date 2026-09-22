@@ -4,7 +4,8 @@ import '../../../data/models/vault_item.dart';
 import '../../../data/services/vault_service.dart';
 
 class NewRecordView extends StatefulWidget {
-  const NewRecordView({super.key});
+  final VaultItem? itemToEdit;
+  const NewRecordView({super.key, this.itemToEdit});
 
   @override
   State<NewRecordView> createState() => _NewRecordViewState();
@@ -13,9 +14,9 @@ class NewRecordView extends StatefulWidget {
 class _NewRecordViewState extends State<NewRecordView> {
   final VaultService vaultService = Get.find<VaultService>();
 
-  final TextEditingController nameController = TextEditingController(text: 'Apple');
-  final TextEditingController userIdController = TextEditingController(text: 'steve1902@gmail.com');
-  final TextEditingController passwordController = TextEditingController();
+  late final TextEditingController nameController;
+  late final TextEditingController userIdController;
+  late final TextEditingController passwordController;
 
   double passwordLength = 12;
   bool useNumbers = true;
@@ -27,7 +28,16 @@ class _NewRecordViewState extends State<NewRecordView> {
   @override
   void initState() {
     super.initState();
-    _regeneratePassword();
+    nameController = TextEditingController(text: widget.itemToEdit?.name ?? 'Apple');
+    userIdController = TextEditingController(text: widget.itemToEdit?.username ?? 'steve1902@gmail.com');
+    passwordController = TextEditingController(text: widget.itemToEdit?.password ?? '');
+    
+    if (widget.itemToEdit != null) {
+      selectedCategory = widget.itemToEdit!.category;
+      passwordLength = widget.itemToEdit!.password.length.toDouble().clamp(6, 32);
+    } else {
+      _regeneratePassword();
+    }
   }
 
   @override
@@ -63,19 +73,25 @@ class _NewRecordViewState extends State<NewRecordView> {
     }
 
     final newItem = VaultItem(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: widget.itemToEdit?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
       name: name,
       username: userId,
       password: pass,
       category: selectedCategory,
-      link: '${name.toLowerCase().replaceAll(' ', '')}.com',
-      autofill: true,
+      link: widget.itemToEdit?.link ?? '${name.toLowerCase().replaceAll(' ', '')}.com',
+      autofill: widget.itemToEdit?.autofill ?? true,
       securityStatus: pass.length > 10 ? SecurityStatus.safe : SecurityStatus.weak,
-      brandColor: _pickColor(name),
-      iconLetter: name.isNotEmpty ? name.substring(0, name.length > 2 ? 2 : 1) : 'A',
+      brandColor: widget.itemToEdit?.brandColor ?? _pickColor(name),
+      iconLetter: widget.itemToEdit?.iconLetter ?? (name.isNotEmpty ? name.substring(0, name.length > 2 ? 2 : 1) : 'A'),
+      isFavorite: widget.itemToEdit?.isFavorite ?? false,
     );
 
-    vaultService.addItem(newItem);
+    if (widget.itemToEdit != null) {
+      vaultService.updateItem(newItem);
+    } else {
+      vaultService.addItem(newItem);
+    }
+    
     Get.back();
     Get.snackbar('Success', '$name saved to your vault!',
         snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.green, colorText: Colors.white);
@@ -105,9 +121,9 @@ class _NewRecordViewState extends State<NewRecordView> {
           onPressed: () => Get.back(),
         ),
         centerTitle: true,
-        title: const Text(
-          'New record',
-          style: TextStyle(
+        title: Text(
+          widget.itemToEdit != null ? 'Edit record' : 'New record',
+          style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.w700,
             fontSize: 20,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/models/vault_item.dart';
 import '../../../data/services/vault_service.dart';
+import 'new_record_view.dart';
 
 class PasswordDetailsView extends StatefulWidget {
   const PasswordDetailsView({super.key});
@@ -12,37 +13,21 @@ class PasswordDetailsView extends StatefulWidget {
 
 class _PasswordDetailsViewState extends State<PasswordDetailsView> {
   final VaultService vaultService = Get.find<VaultService>();
-  late VaultItem item;
+  late String itemId;
   bool isPasswordVisible = false;
-  late bool autofill;
 
   @override
   void initState() {
     super.initState();
     final args = Get.arguments;
     if (args is VaultItem) {
-      item = args;
+      itemId = args.id;
     } else {
-      // Fallback
-      item = vaultService.items.isNotEmpty
-          ? vaultService.items.first
-          : VaultItem(
-              id: '0',
-              name: 'Adobe',
-              username: 'work.steve@gmail.com',
-              password: 'Czb6n1WFh8Qvia#M',
-              category: 'Priority',
-              link: 'adobe.com',
-              autofill: true,
-              securityStatus: SecurityStatus.safe,
-              brandColor: const Color(0xFFED2224),
-              iconLetter: 'A',
-            );
+      itemId = '0';
     }
-    autofill = item.autofill;
   }
 
-  void _deleteRecord() {
+  void _deleteRecord(VaultItem item) {
     Get.defaultDialog(
       title: 'Delete Password',
       middleText: 'Are you sure you want to delete ${item.name} from your vault?',
@@ -60,43 +45,17 @@ class _PasswordDetailsViewState extends State<PasswordDetailsView> {
     );
   }
 
-  void _showChangePasswordDialog() {
-    final newPassController = TextEditingController(text: item.password);
-    Get.defaultDialog(
-      title: 'Change Password',
-      content: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        child: TextField(
-          controller: newPassController,
-          decoration: const InputDecoration(
-            labelText: 'New Password',
-            border: OutlineInputBorder(),
-          ),
-        ),
-      ),
-      textConfirm: 'Update',
-      textCancel: 'Cancel',
-      confirmTextColor: Colors.white,
-      buttonColor: const Color(0xFF0057FF),
-      onConfirm: () {
-        final newPass = newPassController.text.trim();
-        if (newPass.isNotEmpty) {
-          final updated = item.copyWith(password: newPass);
-          vaultService.updateItem(updated);
-          setState(() {
-            item = updated;
-          });
-          Get.back();
-          Get.snackbar('Updated', 'Password updated successfully!',
-              snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.green, colorText: Colors.white);
-        }
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Obx(() {
+      final item = vaultService.items.firstWhereOrNull((e) => e.id == itemId);
+      if (item == null) {
+        return Scaffold(
+          appBar: AppBar(leading: BackButton()),
+          body: const Center(child: Text('Record not found')),
+        );
+      }
+      return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -111,9 +70,30 @@ class _PasswordDetailsViewState extends State<PasswordDetailsView> {
           ),
         ),
         actions: [
+          Obx(() {
+            final isFav = vaultService.items.firstWhereOrNull((e) => e.id == item.id)?.isFavorite ?? false;
+            return IconButton(
+              icon: Icon(
+                isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                color: isFav ? Colors.redAccent : Colors.black54,
+                size: 24,
+              ),
+              onPressed: () {
+                vaultService.toggleFavorite(item);
+              },
+              tooltip: 'Toggle Favourite',
+            );
+          }),
+          IconButton(
+            icon: const Icon(Icons.edit_outlined, color: Colors.black54, size: 24),
+            onPressed: () {
+              Get.to(() => NewRecordView(itemToEdit: item));
+            },
+            tooltip: 'Edit password',
+          ),
           IconButton(
             icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 24),
-            onPressed: _deleteRecord,
+            onPressed: () => _deleteRecord(item),
             tooltip: 'Delete password',
           ),
           const SizedBox(width: 8),
@@ -263,9 +243,8 @@ class _PasswordDetailsViewState extends State<PasswordDetailsView> {
                   valueWidget: Transform.scale(
                     scale: 0.8,
                     child: Switch(
-                      value: autofill,
+                      value: item.autofill,
                       onChanged: (val) {
-                        setState(() => autofill = val);
                         final updated = item.copyWith(autofill: val);
                         vaultService.updateItem(updated);
                       },
@@ -298,7 +277,7 @@ class _PasswordDetailsViewState extends State<PasswordDetailsView> {
               const SizedBox(width: 14),
               Expanded(
                 child: OutlinedButton(
-                  onPressed: _showChangePasswordDialog,
+                  onPressed: () => Get.to(() => NewRecordView(itemToEdit: item)),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     side: const BorderSide(color: Colors.black26),
@@ -315,6 +294,7 @@ class _PasswordDetailsViewState extends State<PasswordDetailsView> {
         ],
       ),
     );
+    });
   }
 
   Widget _buildDetailRow({required String label, required Widget valueWidget}) {
