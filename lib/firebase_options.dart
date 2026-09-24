@@ -3,6 +3,7 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -40,47 +41,47 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCYkZYYdMdfxjeCuc6blt2mb-xlcJupydM',
-    appId: '1:81177840526:web:052b92f6f3ea844fc4b2df',
-    messagingSenderId: '81177840526',
-    projectId: 'lockward-e356',
-    authDomain: 'lockward-e356.firebaseapp.com',
-    storageBucket: 'lockward-e356.firebasestorage.app',
+  static FirebaseOptions get web => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_API_KEY_WEB'] ?? '',
+    appId: dotenv.env['FIREBASE_APP_ID_WEB'] ?? '',
+    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+    authDomain: '${dotenv.env['FIREBASE_PROJECT_ID'] ?? ''}.firebaseapp.com',
+    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
     measurementId: 'G-FVZ1V0GE1N',
   );
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCA2zG8sk8EH8thckRbJTXd_BWUnTekp48',
-    appId: '1:81177840526:android:4969152a30848cc8c4b2df',
-    messagingSenderId: '81177840526',
-    projectId: 'lockward-e356',
-    storageBucket: 'lockward-e356.firebasestorage.app',
+  static FirebaseOptions get android => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_API_KEY_ANDROID'] ?? '',
+    appId: dotenv.env['FIREBASE_APP_ID_ANDROID'] ?? '',
+    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
   );
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyD_vBOKiWsCJVmRGYmVL57hg8QKvrzc3oQ',
-    appId: '1:81177840526:ios:df2ce6b67dcb5188c4b2df',
-    messagingSenderId: '81177840526',
-    projectId: 'lockward-e356',
-    storageBucket: 'lockward-e356.firebasestorage.app',
+  static FirebaseOptions get ios => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_API_KEY_IOS'] ?? '',
+    appId: dotenv.env['FIREBASE_APP_ID_IOS'] ?? '',
+    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
     iosBundleId: 'com.finalyearproject.lockward',
   );
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyD_vBOKiWsCJVmRGYmVL57hg8QKvrzc3oQ',
-    appId: '1:81177840526:ios:df2ce6b67dcb5188c4b2df',
-    messagingSenderId: '81177840526',
-    projectId: 'lockward-e356',
-    storageBucket: 'lockward-e356.firebasestorage.app',
+  static FirebaseOptions get macos => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_API_KEY_IOS'] ?? '',
+    appId: dotenv.env['FIREBASE_APP_ID_IOS'] ?? '',
+    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
     iosBundleId: 'com.finalyearproject.lockward',
   );
 
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCYkZYYdMdfxjeCuc6blt2mb-xlcJupydM',
-    appId: '1:81177840526:web:c09b8b0a4a34bbc2c4b2df',
-    messagingSenderId: '81177840526',
-    projectId: 'lockward-e356',
-    authDomain: 'lockward-e356.firebaseapp.com',
-    storageBucket: 'lockward-e356.firebasestorage.app',
+  static FirebaseOptions get windows => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_API_KEY_WEB'] ?? '',
+    appId: dotenv.env['FIREBASE_APP_ID_WEB'] ?? '',
+    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+    authDomain: '${dotenv.env['FIREBASE_PROJECT_ID'] ?? ''}.firebaseapp.com',
+    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
     measurementId: 'G-KTQ6MQ28BP',
   );
 }
