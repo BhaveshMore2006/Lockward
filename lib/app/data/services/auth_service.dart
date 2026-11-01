@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -9,12 +10,99 @@ class AuthService extends GetxService {
 
   // Observable for tracking the current user state
   final Rx<User?> currentUser = Rx<User?>(null);
+  final Rx<Map<String, dynamic>?> userProfile = Rx<Map<String, dynamic>?>(null);
+  StreamSubscription<User?>? _authSubscription;
+
+  bool get isLoggedIn => _auth.currentUser != null;
+
+  String get userName {
+    final profileName = userProfile.value?['name']?.toString().trim();
+    if (profileName != null && profileName.isNotEmpty) {
+      return profileName;
+    }
+    final authName = currentUser.value?.displayName?.trim();
+    if (authName != null && authName.isNotEmpty) {
+      return authName;
+    }
+    final email = currentUser.value?.email;
+    if (email != null && email.isNotEmpty) {
+      final nameFromEmail = email.split('@').first;
+      if (nameFromEmail.isNotEmpty) {
+        return nameFromEmail[0].toUpperCase() + nameFromEmail.substring(1);
+      }
+    }
+    return 'User';
+  }
+
+  String get userEmail {
+    return currentUser.value?.email ?? userProfile.value?['email']?.toString() ?? '';
+  }
+
+  String get userPhone {
+    return userProfile.value?['phone']?.toString() ?? currentUser.value?.phoneNumber ?? '';
+  }
 
   @override
   void onInit() {
     super.onInit();
-    // Bind the stream so it updates automatically when auth state changes
-    currentUser.bindStream(_auth.authStateChanges());
+
+    // Check initial user state
+    currentUser.value = _auth.currentUser;
+    if (_auth.currentUser != null) {
+      fetchUserProfile(_auth.currentUser!.uid);
+    }
+
+    // Safely listen to auth state changes
+    _authSubscription = _auth.authStateChanges().listen((User? user) {
+      currentUser.value = user;
+      if (user != null) {
+        fetchUserProfile(user.uid);
+      } else {
+        userProfile.value = null;
+      }
+    });
+  }
+
+  @override
+  void onClose() {
+    _authSubscription?.cancel();
+    super.onClose();
+  }
+
+  // --- Fetch User Profile From Firestore ---
+  Future<void> fetchUserProfile([String? uid]) async {
+    try {
+      final userId = uid ?? _auth.currentUser?.uid;
+      if (userId == null) return;
+
+      final doc = await _firestore.collection('users').doc(userId).get();
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data()!;
+        userProfile.value = data;
+
+        // If Firebase Auth displayName is empty, update it with name from Firestore
+        final name = data['name'] as String?;
+        if (name != null && name.trim().isNotEmpty && (_auth.currentUser?.displayName == null || _auth.currentUser!.displayName!.isEmpty)) {
+          await _auth.currentUser?.updateDisplayName(name.trim());
+          currentUser.value = _auth.currentUser;
+        }
+      } else {
+        // Fallback: search by email
+        final email = _auth.currentUser?.email;
+        if (email != null && email.isNotEmpty) {
+          final query = await _firestore
+              .collection('users')
+              .where('email', isEqualTo: email.trim())
+              .limit(1)
+              .get();
+          if (query.docs.isNotEmpty) {
+            userProfile.value = query.docs.first.data();
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching user profile from Firestore: $e");
+    }
   }
 
   // --- Registration Logic ---
@@ -34,16 +122,38 @@ class AuthService extends GetxService {
       // 2. Store additional user info in Firestore
       if (userCredential.user != null) {
         String uid = userCredential.user!.uid;
-        await _firestore.collection('users').doc(uid).set({
+
+        try {
+          await userCredential.user!.updateDisplayName(name);
+          await userCredential.user!.reload();
+          currentUser.value = _auth.currentUser;
+        } catch (e) {
+          debugPrint('Error updating displayName: $e');
+        }
+
+        final userData = {
           'uid': uid,
           'name': name,
           'email': email,
           'phone': phone,
           'password': password,
           'createdAt': FieldValue.serverTimestamp(),
-        }).timeout(const Duration(seconds: 5), onTimeout: () {
-          throw Exception("Firestore write timed out. Have you created the Firestore Database in the Firebase Console?");
-        });
+        };
+
+        await _firestore.collection('users').doc(uid).set(userData).timeout(
+          const Duration(seconds: 5),
+          onTimeout: () {
+            throw Exception("Firestore write timed out. Have you created the Firestore Database in the Firebase Console?");
+          },
+        );
+
+        userProfile.value = {
+          'uid': uid,
+          'name': name,
+          'email': email,
+          'phone': phone,
+        };
+
         return true;
       }
       return false;
@@ -59,7 +169,14 @@ class AuthService extends GetxService {
   // --- Login Logic ---
   Future<bool> login(String email, String password) async {
     try {
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      if (userCredential.user != null) {
+        currentUser.value = userCredential.user;
+        await fetchUserProfile(userCredential.user!.uid);
+      }
       return true;
     } on FirebaseAuthException catch (e) {
       _showErrorSnackbar(e.message ?? 'Invalid email or password');
@@ -73,6 +190,8 @@ class AuthService extends GetxService {
   // --- Logout Logic ---
   Future<void> logout() async {
     await _auth.signOut();
+    userProfile.value = null;
+    currentUser.value = null;
   }
 
   // --- Password Reset Logic ---

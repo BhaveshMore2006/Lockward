@@ -28,8 +28,8 @@ class _NewRecordViewState extends State<NewRecordView> {
   @override
   void initState() {
     super.initState();
-    nameController = TextEditingController(text: widget.itemToEdit?.name ?? 'Apple');
-    userIdController = TextEditingController(text: widget.itemToEdit?.username ?? 'steve1902@gmail.com');
+    nameController = TextEditingController(text: widget.itemToEdit?.name ?? '');
+    userIdController = TextEditingController(text: widget.itemToEdit?.username ?? '');
     passwordController = TextEditingController(text: widget.itemToEdit?.password ?? '');
     
     if (widget.itemToEdit != null) {
@@ -146,7 +146,7 @@ class _NewRecordViewState extends State<NewRecordView> {
           _buildInputField(
             controller: userIdController,
             label: 'User id',
-            hint: 'e.g. steve1902@gmail.com',
+            hint: 'e.g. user@gmail.com',
           ),
           const SizedBox(height: 16),
 

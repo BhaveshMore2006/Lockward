@@ -14,24 +14,38 @@ import 'app/routes/app_pages.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
 
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.dumpErrorToConsole(details);
   };
 
   try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    debugPrint("dotenv load warning: $e");
+  }
+
+  try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    // Initialize our Authentication Service globally
-    Get.put(AuthService());
   } catch (e, stack) {
     debugPrint("Firebase init error: $e\n$stack");
   }
 
-  // Initialize VaultService globally
-  Get.put(VaultService());
+  try {
+    // Initialize our Authentication Service globally
+    Get.put(AuthService(), permanent: true);
+  } catch (e, stack) {
+    debugPrint("AuthService init error: $e\n$stack");
+  }
+
+  try {
+    // Initialize VaultService globally
+    Get.put(VaultService(), permanent: true);
+  } catch (e, stack) {
+    debugPrint("VaultService init error: $e\n$stack");
+  }
 
   runApp(
     DevicePreview(

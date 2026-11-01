@@ -1,23 +1,16 @@
 import 'package:get/get.dart';
+import '../../../data/services/auth_service.dart';
 
 class ProfilePageController extends GetxController {
-  //TODO: Implement ProfilePageController
+  final AuthService authService = Get.find<AuthService>();
 
-  final count = 0.obs;
   @override
   void onInit() {
     super.onInit();
+    authService.fetchUserProfile();
   }
 
-  @override
-  void onReady() {
-    super.onReady();
+  void refreshProfile() {
+    authService.fetchUserProfile();
   }
-
-  @override
-  void onClose() {
-    super.onClose();
-  }
-
-  void increment() => count.value++;
 }
