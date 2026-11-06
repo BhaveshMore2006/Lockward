@@ -14,6 +14,7 @@ abstract class Routes {
   static const PASSWORD_DETAILS = _Paths.PASSWORD_DETAILS;
   static const FORGOT_PASSWORD = _Paths.FORGOT_PASSWORD;
   static const RESET_PASSWORD = _Paths.RESET_PASSWORD;
+  static const VAULT_LOCK = _Paths.VAULT_LOCK;
 }
 
 abstract class _Paths {
@@ -29,4 +30,5 @@ abstract class _Paths {
   static const PASSWORD_DETAILS = '/password-details';
   static const FORGOT_PASSWORD = '/forgot-password';
   static const RESET_PASSWORD = '/reset-password';
+  static const VAULT_LOCK = '/vault-lock';
 }

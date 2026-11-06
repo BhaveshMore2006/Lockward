@@ -17,6 +17,7 @@ import '../modules/splash_screen/views/splash_screen_view.dart';
 
 import '../modules/home/views/new_record_view.dart';
 import '../modules/home/views/password_details_view.dart';
+import '../modules/home/views/vault_lock_view.dart';
 import '../modules/forgot_password/bindings/forgot_password_binding.dart';
 import '../modules/forgot_password/views/forgot_password_view.dart';
 import '../modules/reset_password/bindings/reset_password_binding.dart';
@@ -82,6 +83,10 @@ class AppPages {
       name: _Paths.RESET_PASSWORD,
       page: () => const ResetPasswordView(),
       binding: ResetPasswordBinding(),
+    ),
+    GetPage(
+      name: _Paths.VAULT_LOCK,
+      page: () => const VaultLockView(),
     ),
   ];
 }

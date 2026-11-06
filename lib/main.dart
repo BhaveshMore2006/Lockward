@@ -8,12 +8,15 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'app/data/services/auth_service.dart';
 import 'app/data/services/vault_service.dart';
+import 'app/data/services/screen_security_service.dart';
+import 'app/data/services/session_security_service.dart';
 import 'core/theme/app_colors.dart';
 import 'firebase_options.dart';
 import 'app/routes/app_pages.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await ScreenSecurityService.setSecureMode(true);
 
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.dumpErrorToConsole(details);
@@ -47,6 +50,13 @@ void main() async {
     debugPrint("VaultService init error: $e\n$stack");
   }
 
+  try {
+    // Initialize SessionSecurityService globally (Inactivity & Background auto-lock)
+    Get.put(SessionSecurityService(), permanent: true);
+  } catch (e, stack) {
+    debugPrint("SessionSecurityService init error: $e\n$stack");
+  }
+
   runApp(
     DevicePreview(
       enabled: !kReleaseMode,
@@ -65,8 +75,19 @@ class LockwardApp extends StatelessWidget {
 
       title: "Lockward",
 
-      // Device Preview settings
-      builder: DevicePreview.appBuilder,
+      // Device Preview settings with global Inactivity Touch Watchdog
+      builder: (context, child) {
+        final previewChild = DevicePreview.appBuilder(context, child);
+        return Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: (_) {
+            if (Get.isRegistered<SessionSecurityService>()) {
+              SessionSecurityService.to.recordUserActivity();
+            }
+          },
+          child: previewChild,
+        );
+      },
       locale: DevicePreview.locale(context),
 
       initialRoute: AppPages.INITIAL,
@@ -100,8 +121,10 @@ class LockwardApp extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: AppColors.primary),
+            borderSide: const BorderSide(color: AppColors.primary, width: 2),
           ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          hintStyle: const TextStyle(color: AppColors.textGrey),
         ),
       ),
     );
